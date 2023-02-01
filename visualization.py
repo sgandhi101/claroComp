@@ -1,7 +1,9 @@
 from dash import Dash, dcc, html, Input, Output
 import plotly.express as px
-import pandas as pd
 import numpy as np
+import pandas as pd
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.linear_model import LogisticRegression
 
 app = Dash(__name__)
 
@@ -15,12 +17,35 @@ app.layout = html.Div([
     dcc.Loading(dcc.Graph(id="animations-x-graph"), type="cube")
 ])
 
+# Load the data into a pandas dataframe
+df2 = pd.read_csv('inpatient_discharges_first_six.csv')
+
+# Split the data into training and testing sets
+training_data = df2[:int(len(df2) * 0.8)]
+testing_data = df2[int(len(df2) * 0.8):]
+
+# Convert the DRG descriptions into numerical features using Tf-Idf
+vectorizer = TfidfVectorizer()
+training_features = vectorizer.fit_transform(training_data['DRG Description'])
+testing_features = vectorizer.transform(testing_data['DRG Description'])
+
+# Train a logistic regression model to predict the length of stay
+model = LogisticRegression()
+model.fit(training_features, training_data['LOS'])
+
+# Make predictions on the testing data
+predictions = model.predict(testing_features)
+
+# Evaluate the model's accuracy
+accuracy = model.score(testing_features, testing_data['LOS'])
+print("Accuracy:", accuracy)
+
 
 @app.callback(
     Output("animations-x-graph", "figure"),
     Input("animations-x-selection", "value"))
 def display_animated_graph(selection):
-    df = px.data.gapminder()  # replace with your own data source
+    df = px.data.gapminder()
 
     df = df[df['continent'] != 'Oceania']
     df = df[df['continent'] != 'Americas']

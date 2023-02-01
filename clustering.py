@@ -56,7 +56,6 @@ df_scaled = scaler.fit_transform(df)
 import numpy as np
 from sklearn.metrics import silhouette_score
 import matplotlib.pyplot as plt
-import seaborn as sns
 
 # Find the optimal number of clusters
 silhouette_scores = []
